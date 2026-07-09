@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  # Servicio de base de datos MySQL
+  mysql:
+    image: mysql:8
+    container_name: mysql-estudipiso
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: estudipiso
+    ports:
+      - "3307:3306"
+
+  # Servicio de la aplicación Spring Boot
+  app:
+    build: .
+    container_name: estudipiso-api
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/estudipiso
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    depends_on:
+      - mysql
