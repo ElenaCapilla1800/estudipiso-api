@@ -71,6 +71,8 @@ public class RoomService {
         room.setRoommatesCount(updatedData.getRoommatesCount());
         room.setVideoUrl(updatedData.getVideoUrl());
         room.setStatus(updatedData.getStatus());
+        room.setLatitude(updatedData.getLatitude());   // Coordenada para Google Maps
+        room.setLongitude(updatedData.getLongitude()); // Coordenada para Google Maps
 
         return roomRepository.save(room);
     }

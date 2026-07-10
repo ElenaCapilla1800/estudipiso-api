@@ -45,6 +45,10 @@ public class Room {
     // URL del vídeo (YouTube, Google Drive, etc.)
     private String videoUrl;
 
+    // Coordenadas geográficas para mostrar la ubicación en Google Maps
+    private Double latitude;
+    private Double longitude;
+
     // Estado del anuncio — solo se muestran los activos
     @Enumerated(EnumType.STRING)
     private Status status = Status.ACTIVE;
