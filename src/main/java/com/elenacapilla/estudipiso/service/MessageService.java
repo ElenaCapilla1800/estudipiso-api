@@ -8,6 +8,8 @@ import com.elenacapilla.estudipiso.repository.RoomRepository;
 import com.elenacapilla.estudipiso.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @Service
@@ -22,7 +24,8 @@ public class MessageService {
     @Autowired
     private RoomRepository roomRepository;
 
-    // Enviar mensaje sobre una habitación
+    // Enviar un mensaje entre dos usuarios sobre una habitación concreta
+    // Busca el remitente, destinatario y habitación en la BD antes de guardar el mensaje
     public Message send(Long senderId, Long receiverId, Long roomId, String content) {
         User sender = userRepository.findById(senderId)
                 .orElseThrow(() -> new RuntimeException("Remitente no encontrado"));
@@ -40,23 +43,30 @@ public class MessageService {
         return messageRepository.save(message);
     }
 
-    // Ver mensajes recibidos por un usuario
+    // Obtener todos los mensajes recibidos por un usuario, del más reciente al más antiguo
+    // @Transactional mantiene la sesión de Hibernate abierta durante la serialización JSON
+    // Esto evita LazyInitializationException al acceder a colecciones lazy (ej: fotos de la habitación)
+    @Transactional
     public List<Message> getReceivedMessages(Long userId) {
         return messageRepository.findByReceiverIdOrderBySentAtDesc(userId);
     }
 
-    // Ver conversación entre dos usuarios sobre una habitación
+    // Obtener la conversación completa entre dos usuarios sobre una habitación
+    // Usamos findConversation (query personalizada) en lugar de findBySenderIdAndReceiverIdAndRoomId
+    // para obtener mensajes en AMBAS direcciones — si no, el propietario no vería los mensajes del estudiante
+    // @Transactional evita LazyInitializationException durante la serialización
+    @Transactional
     public List<Message> getConversation(Long senderId, Long receiverId, Long roomId) {
-        return messageRepository.findBySenderIdAndReceiverIdAndRoomId(
-                senderId, receiverId, roomId);
+        return messageRepository.findConversation(senderId, receiverId, roomId);
     }
 
-    // Contar mensajes no leídos
+    // Contar los mensajes no leídos de un usuario (para el badge de notificaciones)
     public long countUnread(Long userId) {
         return messageRepository.countByReceiverIdAndReadFalse(userId);
     }
 
-    // Marcar mensaje como leído
+    // Marcar un mensaje específico como leído
+    // Se llama automáticamente desde Android cuando el usuario abre una conversación
     public Message markAsRead(Long messageId) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new RuntimeException("Mensaje no encontrado"));
