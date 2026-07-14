@@ -1,15 +1,14 @@
 # Etapa 1: compilar con Maven
-FROM eclipse-temurin:23-jdk AS build
+FROM maven:3.9-eclipse-temurin-23 AS build
 WORKDIR /app
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
-RUN ./mvnw dependency:go-offline
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
 COPY src ./src
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests -B
 
 # Etapa 2: ejecutar
 FROM eclipse-temurin:23-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8083
-ENTRYPOINT ["java", "-jar", "app.jar"]-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
