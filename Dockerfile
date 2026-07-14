@@ -1,14 +1,15 @@
-# Usamos la imagen oficial de Java 23
-FROM eclipse-temurin:23-jdk-alpine
-
-# Directorio de trabajo dentro del contenedor
+# Etapa 1: compilar con Maven
+FROM eclipse-temurin:23-jdk AS build
 WORKDIR /app
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
+RUN ./mvnw dependency:go-offline
+COPY src ./src
+RUN ./mvnw clean package -DskipTests
 
-# Copiamos el jar generado por Maven
-COPY target/*.jar app.jar
-
-# Puerto que expone la aplicación
+# Etapa 2: ejecutar
+FROM eclipse-temurin:23-jre
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8083
-
-# Comando para arrancar la aplicación
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]-jar", "app.jar"]
